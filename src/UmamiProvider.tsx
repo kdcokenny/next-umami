@@ -1,29 +1,8 @@
-import Script, { ScriptProps } from 'next/script'
-import React, { ReactNode } from 'react'
-
-// https://umami.is/docs/tracker-configuration
-interface Props extends Pick<ScriptProps, 'onLoad' | 'onReady' | 'onError'> {
-  /**
-   * The source of the script. Defaults to version hosted by Umami.
-   */
-  src?: string
-  /**
-   * Website ID found in Umami dashboard. https://umami.is/docs/collect-data
-   */
-  websiteId: string
-  /**
-   * By default, Umami will send data to wherever the script is located. You can override this to send data to another location.
-   */
-  hostUrl?: string
-  /**
-   * By default, Umami tracks all pageviews and events for you automatically. You can disable this behavior and track events yourself using the tracker functions.
-   */
-  autoTrack?: boolean
-  /**
-   * If you want the tracker to only run on specific domains, you can add them to your tracker script. This is a comma delimited list of domain names. Helps if you are working in a staging/development environment.
-   */
-  domains?: string | string[]
-  children?: ReactNode
+import Script from 'next/script'
+import React from 'react'
+import { NextUmamiProxyOptions, UmamiProps } from './common'
+type RequiredKeys<T> = {
+  [K in keyof Required<T>]-?: T[K] | undefined
 }
 
 export default function UmamiProvider({
@@ -34,14 +13,26 @@ export default function UmamiProvider({
   domains,
   children,
   ...props
-}: Props) {
+}: UmamiProps) {
+  const proxyOptions: RequiredKeys<NextUmamiProxyOptions> | undefined = process
+    .env.next_umami_proxy
+    ? {
+        clientScriptPath: process.env.next_umami_clientScriptPath,
+        serverScriptDestination: process.env.next_umami_serverScriptDestination,
+        clientApiPath: process.env.next_umami_clientApiPath,
+        serverApiDestination: process.env.next_umami_serverApiDestination,
+      }
+    : undefined
+
+  const effectiveHostUrl = proxyOptions?.clientApiPath || hostUrl
+
   return (
     <>
       <Script
-        src={src}
+        src={proxyOptions?.clientScriptPath ?? src}
         data-website-id={websiteId}
         data-auto-track={autoTrack}
-        {...(hostUrl && { 'data-host-url': hostUrl })}
+        {...(effectiveHostUrl && { 'data-host-url': effectiveHostUrl })}
         {...(domains && {
           'data-domains': Array.isArray(domains) ? domains.join(',') : domains,
         })}
