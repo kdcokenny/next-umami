@@ -37,7 +37,7 @@ export type NextUmamiProxyOptions = {
    */
   serverScriptDestination?: string
   /**
-   * The path to the API. Defaults to ''. This can be any path but this will ALWAYS end with '/api/send' due to a restriction in the Umami script.
+   * The path to the API. Defaults to '/'. This can be any path but this will ALWAYS end with '/api/send' due to a restriction in the Umami script.
    */
   clientApiPath?: string
   /**

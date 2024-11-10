@@ -4,8 +4,8 @@ import { Rewrite } from 'next/dist/lib/load-custom-routes'
 
 type NextUmamiEnv = { next_umami_proxy: 'true' } & {
   [K in keyof Required<NextUmamiProxyOptions> as `next_umami_${K}`]:
-    | string
-    | undefined
+  | string
+  | undefined
 }
 
 export default function withUmamiProxy(
@@ -17,7 +17,7 @@ export default function withUmamiProxy(
       next_umami_clientScriptPath: options.clientScriptPath ?? '/script.js',
       next_umami_serverScriptDestination:
         options.serverScriptDestination ?? 'https://cloud.umami.is/script.js',
-      next_umami_clientApiPath: options.clientApiPath ?? '',
+      next_umami_clientApiPath: options.clientApiPath ?? '/',
       next_umami_serverApiDestination:
         options.serverApiDestination ??
         'https://api-gateway.umami.dev/api/send',
