@@ -17,9 +17,9 @@ export default function withUmamiProxy(
       next_umami_clientScriptPath: options.clientScriptPath ?? '/script.js',
       next_umami_serverScriptDestination:
         options.serverScriptDestination ?? 'https://cloud.umami.is/script.js',
-      next_umami_clientApiPath: options.clientApiPath ?? '/api',
+      next_umami_clientApiPath: options.clientApiPath ?? '/api/send',
       next_umami_serverApiDestination:
-        options.serverApiDestination ?? 'https://cloud.umami.is/api/send',
+        options.serverApiDestination ?? 'https://api-gateway.umami.dev',
     }
 
     return {
@@ -40,7 +40,8 @@ export default function withUmamiProxy(
           },
           {
             source: nextUmamiEnv.next_umami_clientApiPath,
-            destination: nextUmamiEnv.next_umami_serverApiDestination,
+            destination:
+              nextUmamiEnv.next_umami_serverApiDestination + '/api/send',
           },
         ] as const as Rewrite[]
 

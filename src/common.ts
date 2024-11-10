@@ -37,11 +37,11 @@ export type NextUmamiProxyOptions = {
    */
   serverScriptDestination?: string
   /**
-   * The path to the API. Defaults to '/api'.
+   * The path to the API. Defaults to '/api/send'.
    */
   clientApiPath?: string
   /**
-   * The location of the API you'd like to pull. Defaults to 'https://api-gateway.umami.dev/api/send'.
+   * The location of the API you'd like to pull. Defaults to 'https://api-gateway.umami.dev'. Note that this will ALWAYS end with '/api/send'.
    */
   serverApiDestination?: string
 }
