@@ -4,8 +4,8 @@ import { Rewrite } from 'next/dist/lib/load-custom-routes'
 
 type NextUmamiEnv = { next_umami_proxy: 'true' } & {
   [K in keyof Required<NextUmamiProxyOptions> as `next_umami_${K}`]:
-  | string
-  | undefined
+    | string
+    | undefined
 }
 
 export default function withUmamiProxy(
@@ -40,7 +40,13 @@ export default function withUmamiProxy(
             destination: nextUmamiEnv.next_umami_serverScriptDestination,
           },
           {
-            source: nextUmamiEnv.next_umami_clientApiPath + '/api/send',
+            source:
+              (
+                nextUmamiEnv.next_umami_clientApiPath
+                  ?.split('/')
+                  .slice(0, -1)
+                  .join('/') || ''
+              ).replace(/\/$/, '') + '/api/send',
             destination: nextUmamiEnv.next_umami_serverApiDestination,
           },
         ] as const as Rewrite[]
