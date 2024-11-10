@@ -15,6 +15,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "prettier --write \"**/*.{ts,tsx}\"",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "npm run build && npm run build:types",
     "prepublishOnly": "npm run build"
   },
   "repository": {
