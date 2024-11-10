@@ -38,6 +38,10 @@ export default function withUmamiProxy(
             source: nextUmamiEnv.next_umami_clientScriptPath,
             destination: nextUmamiEnv.next_umami_serverScriptDestination,
           },
+          {
+            source: nextUmamiEnv.next_umami_clientApiPath,
+            destination: nextUmamiEnv.next_umami_serverApiDestination,
+          },
         ] as const as Rewrite[]
 
         if (process.env.NEXT_UMAMI_DEBUG) {
