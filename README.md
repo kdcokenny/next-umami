@@ -70,6 +70,34 @@ export default function Home() {
 | `onReady?`   | `() => void \| null` | Execute code after Umami's load event when it first loads and then after every subsequent component re-mount.                                                                                                                                                                             |
 | `onError?`   | `(e: any) => void`   | Handle errors if Umami fails to load.                                                                                                                                                                                                                                                     |
 
+### Proxying Umami Requests
+
+To improve performance and avoid ad blockers that might interfere with your analytics, you can proxy Umami's tracking script and API through your own domain. Update your `next.config.mjs`:
+
+```mjs
+/** @type {import('next').NextConfig} */
+import { withUmamiProxy } from 'next-umami';
+
+const nextConfig = withUmamiProxy({
+  clientApiPath: '/events',
+  clientScriptPath: '/js/script.js',
+})({
+  // Your existing Next.js configuration
+  reactStrictMode: true,
+});
+
+export default nextConfig;
+```
+
+The `withUmamiProxy` function accepts these options:
+
+| Name                     | Type     | Description                                                                            |
+|-------------------------|----------|----------------------------------------------------------------------------------------|
+| `clientScriptPath?`     | `string` | Path where Umami script will be served. Defaults to `/script.js`                      |
+| `serverScriptDestination?` | `string` | Original Umami script URL. Defaults to `https://cloud.umami.is/script.js`           |
+| `clientApiPath?`        | `string` | Path where tracking data will be sent. Defaults to `/`                                |
+| `serverApiDestination?` | `string` | Original Umami API endpoint. Defaults to `https://api-gateway.umami.dev/api/send`     |
+
 ## Send Custom Events
 
 The `useUmami` hook exposes two functions that you can call on your website if you want more control over your tracking.
@@ -87,7 +115,7 @@ export default function Page() {
 
   // Default Pageview
   umami.pageView()
-  
+
   // OR
 
   // Custom Pageview
