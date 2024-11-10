@@ -40,10 +40,8 @@ export default function withUmamiProxy(
             destination: nextUmamiEnv.next_umami_serverScriptDestination,
           },
           {
-            source: {
-              source: `${nextUmamiEnv.next_umami_clientApiPath?.replace(/\/$/, '')}/api/send`,
-              destination: nextUmamiEnv.next_umami_serverApiDestination,
-            },
+            source: `${nextUmamiEnv.next_umami_clientApiPath?.replace(/\/$/, '')}/api/send`,
+            destination: nextUmamiEnv.next_umami_serverApiDestination,
           },
         ] as const as Rewrite[]
 
