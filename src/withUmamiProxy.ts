@@ -6,8 +6,8 @@ export default function withUmamiProxy(nextConfig: NextConfig): NextConfig {
     rewrites: async () => {
       const umamiRewrites = [
         {
-          source: 'https://cloud.umami.is/script.js',
-          destination: '/script.js',
+          source: '/script.js',
+          destination: 'https://cloud.umami.is/script.js',
         },
       ]
       if (process.env.NEXT_PLAUSIBLE_DEBUG) {
