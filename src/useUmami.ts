@@ -1,6 +1,4 @@
-'use client'
-
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback } from 'react'
 
 interface PageView {
   // Hostname of server
@@ -24,15 +22,9 @@ type EventData = Record<string, string | number>
 
 // https://umami.is/docs/tracker-functions
 export default function useUmami() {
-  const [isClient, setIsClient] = useState(false)
-
-  useEffect(() => {
-    setIsClient(true) // this will be set to true only in the client
-  }, [])
-
   const isUmamiAvailable = useCallback(() => {
-    return isClient && typeof (window as any).umami !== 'undefined'
-  }, [isClient])
+    return typeof (window as any).umami !== 'undefined'
+  }, [])
 
   const pageView = useCallback(
     (data?: Partial<PageView>) => {
@@ -41,28 +33,32 @@ export default function useUmami() {
         return
       }
 
-      let fullData = {}
-      ;(window as any).umami.track((props: PageView) => {
-        fullData = {
-          ...props,
-          ...(data && { ...data }),
-        }
-        return fullData
-      })
-      return fullData
+      try {
+        ;(window as any).umami.pageview(data)
+        return data
+      } catch (error) {
+        console.error('Failed to track pageview:', error)
+      }
     },
-    [isClient]
+    [isUmamiAvailable]
   )
 
-  const event = useCallback((name: EventName, data?: EventData) => {
-    if (!isUmamiAvailable()) {
-      console.warn('UmamiProvider not found')
-      return
-    }
+  const event = useCallback(
+    (name: EventName, data?: EventData) => {
+      if (!isUmamiAvailable()) {
+        console.warn('UmamiProvider not found')
+        return
+      }
 
-    ;(window as any).umami?.track(name, { ...(data && { ...data }) })
-    return { name, data: { ...(data && { ...data }) } }
-  }, [])
+      try {
+        ;(window as any).umami.track(name, data)
+        return { name, data }
+      } catch (error) {
+        console.error('Failed to track event:', error)
+      }
+    },
+    [isUmamiAvailable]
+  )
 
   return { pageView, event }
 }
