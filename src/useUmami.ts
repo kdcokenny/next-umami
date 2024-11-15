@@ -22,43 +22,23 @@ type EventData = Record<string, string | number>
 
 // https://umami.is/docs/tracker-functions
 export default function useUmami() {
-  const isUmamiAvailable = useCallback(() => {
-    return typeof (window as any).umami !== 'undefined'
+  const pageView = useCallback((data?: Partial<PageView>) => {
+    try {
+      ;(window as any).umami.pageview(data)
+      return data
+    } catch (error) {
+      console.error('Failed to track pageview:', error)
+    }
   }, [])
 
-  const pageView = useCallback(
-    (data?: Partial<PageView>) => {
-      if (!isUmamiAvailable()) {
-        console.warn('UmamiProvider not found')
-        return
-      }
-
-      try {
-        ;(window as any).umami.pageview(data)
-        return data
-      } catch (error) {
-        console.error('Failed to track pageview:', error)
-      }
-    },
-    [isUmamiAvailable]
-  )
-
-  const event = useCallback(
-    (name: EventName, data?: EventData) => {
-      if (!isUmamiAvailable()) {
-        console.warn('UmamiProvider not found')
-        return
-      }
-
-      try {
-        ;(window as any).umami.track(name, data)
-        return { name, data }
-      } catch (error) {
-        console.error('Failed to track event:', error)
-      }
-    },
-    [isUmamiAvailable]
-  )
+  const event = useCallback((name: EventName, data?: EventData) => {
+    try {
+      ;(window as any).umami.track(name, data)
+      return { name, data }
+    } catch (error) {
+      console.error('Failed to track event:', error)
+    }
+  }, [])
 
   return { pageView, event }
 }
