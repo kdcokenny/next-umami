@@ -52,9 +52,9 @@ export default function useUmami() {
       while (eventQueue.length > 0) {
         const event = eventQueue[0]
         if (event.type === 'pageView') {
-          ; (window as any).umami?.track(event.payload.data)
+          ;(window as any).umami?.track(event.payload.data)
         } else {
-          ; (window as any).umami?.track(
+          ;(window as any).umami?.track(
             event.payload.name as string,
             event.payload.data
           )
@@ -94,7 +94,7 @@ export default function useUmami() {
         return fullData
       }
 
-      ; (window as any).umami?.track(fullData)
+      ;(window as any).umami?.track(fullData)
       return fullData
     },
     [isUmamiAvailable]
@@ -115,7 +115,7 @@ export default function useUmami() {
         return { name, data }
       }
 
-      ; (window as any).umami?.track(name, { ...(data && { ...data }) })
+      ;(window as any).umami?.track(name, { ...(data && { ...data }) })
       return { name, data: { ...(data && { ...data }) } }
     },
     [isUmamiAvailable]
