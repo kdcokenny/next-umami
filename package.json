@@ -1,21 +1,21 @@
 {
   "name": "next-umami-temp",
-  "author": "Kenny",
-  "version": "0.0.5", 
-  "license": "MIT",
-  "files": [
-    "dist"
-  ],
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "version": "0.0.5",
+  "description": "Next.js Umami Analytics Integration",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs", 
+      "import": "./dist/index.mjs",
       "require": "./dist/index.js"
     }
   },
-  "type": "module",
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "dev": "tsup --watch",
     "build": "tsup",
