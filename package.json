@@ -1,6 +1,6 @@
 {
   "name": "next-umami-temp",
-  "author": "Gianluca De Marchi - hi@gixnluca.dev",
+  "author": "Kenny",
   "version": "0.0.5", 
   "license": "MIT",
   "files": [
@@ -28,11 +28,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/gixnluca/next-umami.git"
+    "url": "https://github.com/kdcokenny/next-umami.git"
   },
-  "homepage": "https://github.com/gixnluca/next-umami#readme",
+  "homepage": "https://github.com/kdcokenny/next-umami#readme",
   "bugs": {
-    "url": "https://github.com/gixnluca/next-umami/issues"
+    "url": "https://github.com/kdcokenny/next-umami/issues"
   },
   "keywords": [
     "umami",
