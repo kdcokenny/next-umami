@@ -1,7 +1,7 @@
 {
   "name": "next-umami",
   "author": "Gianluca De Marchi - hi@gixnluca.dev",
-  "version": "0.0.41", 
+  "version": "0.0.5", 
   "license": "MIT",
   "files": [
     "dist"
