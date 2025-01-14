@@ -1,5 +1,5 @@
 {
-  "name": "next-umami-temp",
+  "name": "next-umamii",
   "version": "0.0.5",
   "description": "Next.js Umami Analytics Integration",
   "main": "./dist/index.js",
