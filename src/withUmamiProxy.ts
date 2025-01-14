@@ -1,6 +1,6 @@
-import { NextConfig } from 'next'
-import { NextUmamiProxyOptions } from './common'
-import { Rewrite } from 'next/dist/lib/load-custom-routes'
+import type { NextConfig } from 'next'
+import type { NextUmamiProxyOptions } from './common'
+import type { Rewrite } from 'next/dist/lib/load-custom-routes'
 
 type NextUmamiEnv = { next_umami_proxy: 'true' } & {
   [K in keyof Required<NextUmamiProxyOptions> as `next_umami_${K}`]:

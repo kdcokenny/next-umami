@@ -1,5 +1,5 @@
-import { ScriptProps } from 'next/script'
-import { ReactNode } from 'react'
+import type { ScriptProps } from 'next/script'
+import type { ReactNode } from 'react'
 
 // https://umami.is/docs/tracker-configuration
 export interface UmamiProps

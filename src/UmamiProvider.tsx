@@ -1,6 +1,6 @@
 import Script from 'next/script'
 import React from 'react'
-import { NextUmamiProxyOptions, UmamiProps } from './common'
+import type { NextUmamiProxyOptions, UmamiProps } from './common'
 type RequiredKeys<T> = {
   [K in keyof Required<T>]-?: T[K] | undefined
 }
