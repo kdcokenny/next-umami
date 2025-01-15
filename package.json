@@ -1,6 +1,6 @@
 {
-  "name": "next-umamii",
-  "version": "0.0.5",
+  "name": "next-umami",
+  "version": "1.0.0",
   "description": "Next.js Umami Analytics Integration",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

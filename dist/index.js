@@ -1,7 +1,12 @@
+"use strict";
+var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __defProps = Object.defineProperties;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropDescs = Object.getOwnPropertyDescriptors;
+var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getOwnPropSymbols = Object.getOwnPropertySymbols;
+var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __propIsEnum = Object.prototype.propertyIsEnumerable;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -29,6 +34,27 @@ var __objRest = (source, exclude) => {
     }
   return target;
 };
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 var __async = (__this, __arguments, generator) => {
   return new Promise((resolve, reject) => {
     var fulfilled = (value) => {
@@ -50,18 +76,27 @@ var __async = (__this, __arguments, generator) => {
   });
 };
 
+// index.ts
+var next_umami_exports = {};
+__export(next_umami_exports, {
+  default: () => next_umami_default,
+  useUmami: () => useUmami,
+  withUmamiProxy: () => withUmamiProxy
+});
+module.exports = __toCommonJS(next_umami_exports);
+
 // src/useUmami.ts
-import { useCallback, useEffect, useState } from "react";
+var import_react = require("react");
 function useUmami() {
-  const [isClient, setIsClient] = useState(false);
-  const [eventQueue, setEventQueue] = useState([]);
-  useEffect(() => {
+  const [isClient, setIsClient] = (0, import_react.useState)(false);
+  const [eventQueue, setEventQueue] = (0, import_react.useState)([]);
+  (0, import_react.useEffect)(() => {
     setIsClient(true);
   }, []);
-  const isUmamiAvailable = useCallback(() => {
+  const isUmamiAvailable = (0, import_react.useCallback)(() => {
     return isClient && typeof window.umami !== "undefined";
   }, [isClient]);
-  useEffect(() => {
+  (0, import_react.useEffect)(() => {
     if (!isClient) return;
     const processQueue = () => {
       var _a, _b;
@@ -91,7 +126,7 @@ function useUmami() {
     }, 1e3);
     return () => clearInterval(intervalId);
   }, [isClient, isUmamiAvailable, eventQueue]);
-  const pageView = useCallback(
+  const pageView = (0, import_react.useCallback)(
     (data) => {
       var _a;
       const fullData = __spreadValues({}, data || {});
@@ -113,7 +148,7 @@ function useUmami() {
     },
     [isUmamiAvailable]
   );
-  const event = useCallback(
+  const event = (0, import_react.useCallback)(
     (name, data) => {
       var _a;
       if (!isUmamiAvailable()) {
@@ -188,8 +223,8 @@ function withUmamiProxy(options = {}) {
 }
 
 // src/UmamiProvider.tsx
-import Script from "next/script";
-import React from "react";
+var import_script = __toESM(require("next/script"));
+var import_react2 = __toESM(require("react"));
 function UmamiProvider(_a) {
   var _b = _a, {
     src = "https://cloud.umami.is/script.js",
@@ -214,8 +249,8 @@ function UmamiProvider(_a) {
     serverApiDestination: process.env.next_umami_serverApiDestination
   } : void 0;
   const effectiveHostUrl = (proxyOptions == null ? void 0 : proxyOptions.clientApiPath) || hostUrl;
-  return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(
-    Script,
+  return /* @__PURE__ */ import_react2.default.createElement(import_react2.default.Fragment, null, /* @__PURE__ */ import_react2.default.createElement(
+    import_script.default,
     __spreadValues(__spreadProps(__spreadValues(__spreadValues({
       src: (_a2 = proxyOptions == null ? void 0 : proxyOptions.clientScriptPath) != null ? _a2 : src,
       "data-website-id": websiteId,
@@ -230,9 +265,9 @@ function UmamiProvider(_a) {
 
 // index.ts
 var next_umami_default = UmamiProvider;
-export {
-  next_umami_default as default,
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
   useUmami,
   withUmamiProxy
-};
+});
 //# sourceMappingURL=index.js.map
