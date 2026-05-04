@@ -57,7 +57,7 @@
     "typescript": "^5.2.0"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=18.17.0"
   },
   "prettier": {
     "bracketSpacing": true,

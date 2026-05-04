@@ -1,3 +1,4 @@
+'use client'
 "use strict";
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -79,6 +80,7 @@ var __async = (__this, __arguments, generator) => {
 // index.ts
 var next_umami_exports = {};
 __export(next_umami_exports, {
+  createUmamiDistinctId: () => createUmamiDistinctId,
   default: () => next_umami_default,
   useUmami: () => useUmami,
   withUmamiProxy: () => withUmamiProxy
@@ -87,89 +89,111 @@ module.exports = __toCommonJS(next_umami_exports);
 
 // src/useUmami.ts
 var import_react = require("react");
+function getUmamiTracker() {
+  if (typeof window === "undefined") return void 0;
+  return window.umami;
+}
+function isUmamiReadyFor(method) {
+  const tracker = getUmamiTracker();
+  if (!tracker) return false;
+  if (method === "identify") return typeof tracker.identify === "function";
+  return typeof tracker.track === "function";
+}
+function warnIfDistinctIdIsLong(id) {
+  if (id.length <= 50) return;
+  console.warn("Umami distinct IDs should be 50 characters or fewer");
+}
+function parseIdentifyArguments(args) {
+  const [firstArgument] = args;
+  if (typeof firstArgument !== "string") return args;
+  if (firstArgument.length > 0) {
+    warnIfDistinctIdIsLong(firstArgument);
+    return args;
+  }
+  throw new Error("Umami distinct ID must be a non-empty string");
+}
+function flushQueuedCalls(queue) {
+  var _a;
+  for (const [index, queuedCall] of queue.entries()) {
+    const tracker = getUmamiTracker();
+    if (!tracker || !isUmamiReadyFor(queuedCall.method)) {
+      return queue.slice(index);
+    }
+    if (queuedCall.method === "identify") {
+      (_a = tracker.identify) == null ? void 0 : _a.call(tracker, ...queuedCall.args);
+      continue;
+    }
+    tracker.track(...queuedCall.args);
+  }
+  return [];
+}
 function useUmami() {
-  const [isClient, setIsClient] = (0, import_react.useState)(false);
-  const [eventQueue, setEventQueue] = (0, import_react.useState)([]);
-  (0, import_react.useEffect)(() => {
-    setIsClient(true);
+  const eventQueue = (0, import_react.useRef)([]);
+  const flushQueue = (0, import_react.useCallback)(() => {
+    if (eventQueue.current.length === 0) return;
+    eventQueue.current = flushQueuedCalls(eventQueue.current);
   }, []);
-  const isUmamiAvailable = (0, import_react.useCallback)(() => {
-    return isClient && typeof window.umami !== "undefined";
-  }, [isClient]);
   (0, import_react.useEffect)(() => {
-    if (!isClient) return;
-    const processQueue = () => {
-      var _a, _b;
-      if (!isUmamiAvailable()) return;
-      while (eventQueue.length > 0) {
-        const event2 = eventQueue[0];
-        if (event2.type === "pageView") {
-          ;
-          (_a = window.umami) == null ? void 0 : _a.track(event2.payload.data);
-        } else {
-          ;
-          (_b = window.umami) == null ? void 0 : _b.track(
-            event2.payload.name,
-            event2.payload.data
-          );
-        }
-        setEventQueue((queue) => queue.slice(1));
+    flushQueue();
+    const intervalId = window.setInterval(flushQueue, 1e3);
+    return () => window.clearInterval(intervalId);
+  }, [flushQueue]);
+  const enqueueOrSend = (0, import_react.useCallback)(
+    (queuedCall) => {
+      var _a;
+      flushQueue();
+      if (eventQueue.current.length > 0) {
+        console.warn(`Umami tracker unavailable; queueing ${queuedCall.method}`);
+        eventQueue.current = [...eventQueue.current, queuedCall];
+        return;
       }
-    };
-    const intervalId = setInterval(() => {
-      if (isUmamiAvailable()) {
-        processQueue();
-        if (eventQueue.length === 0) {
-          clearInterval(intervalId);
-        }
+      const tracker = getUmamiTracker();
+      if (!tracker || !isUmamiReadyFor(queuedCall.method)) {
+        console.warn(`Umami tracker unavailable; queueing ${queuedCall.method}`);
+        eventQueue.current = [...eventQueue.current, queuedCall];
+        return;
       }
-    }, 1e3);
-    return () => clearInterval(intervalId);
-  }, [isClient, isUmamiAvailable, eventQueue]);
+      if (queuedCall.method === "identify") {
+        (_a = tracker.identify) == null ? void 0 : _a.call(tracker, ...queuedCall.args);
+        return;
+      }
+      tracker.track(...queuedCall.args);
+    },
+    [flushQueue]
+  );
+  const track = (0, import_react.useCallback)(
+    (...args) => {
+      enqueueOrSend({ method: "track", args });
+    },
+    [enqueueOrSend]
+  );
+  const identify = (0, import_react.useCallback)(
+    (...args) => {
+      enqueueOrSend({ method: "identify", args: parseIdentifyArguments(args) });
+    },
+    [enqueueOrSend]
+  );
   const pageView = (0, import_react.useCallback)(
     (data) => {
-      var _a;
       const fullData = __spreadValues({}, data || {});
-      if (!isUmamiAvailable()) {
-        console.warn("UmamiProvider not found, queueing pageView");
-        setEventQueue((queue) => [
-          ...queue,
-          {
-            type: "pageView",
-            payload: { data: fullData },
-            timestamp: Date.now()
-          }
-        ]);
-        return fullData;
-      }
-      ;
-      (_a = window.umami) == null ? void 0 : _a.track(fullData);
+      track(fullData);
       return fullData;
     },
-    [isUmamiAvailable]
+    [track]
   );
   const event = (0, import_react.useCallback)(
     (name, data) => {
-      var _a;
-      if (!isUmamiAvailable()) {
-        console.warn("UmamiProvider not found, queueing event");
-        setEventQueue((queue) => [
-          ...queue,
-          {
-            type: "event",
-            payload: { name, data },
-            timestamp: Date.now()
-          }
-        ]);
+      if (!data) {
+        track(name);
         return { name, data };
       }
-      ;
-      (_a = window.umami) == null ? void 0 : _a.track(name, __spreadValues({}, data && __spreadValues({}, data)));
-      return { name, data: __spreadValues({}, data && __spreadValues({}, data)) };
+      const eventData = __spreadValues({}, data);
+      track(name, eventData);
+      return { name, data: eventData };
     },
-    [isUmamiAvailable]
+    [track]
   );
-  return { pageView, event };
+  return { pageView, event, track, identify };
 }
 
 // src/withUmamiProxy.ts
@@ -225,6 +249,21 @@ function withUmamiProxy(options = {}) {
 // src/UmamiProvider.tsx
 var import_script = __toESM(require("next/script"));
 var import_react2 = __toESM(require("react"));
+var BEFORE_SEND_GLOBAL_PREFIX = "__nextUmamiBeforeSend";
+function createBeforeSendGlobalName() {
+  const randomValue = Math.random().toString(36).slice(2);
+  return `${BEFORE_SEND_GLOBAL_PREFIX}_${Date.now().toString(36)}_${randomValue}`;
+}
+function toSafeBeforeSend(callback) {
+  return (type, payload) => {
+    try {
+      return callback(type, payload) || false;
+    } catch (error) {
+      console.warn("Umami beforeSend failed; request cancelled");
+      return false;
+    }
+  };
+}
 function UmamiProvider(_a) {
   var _b = _a, {
     src = "https://cloud.umami.is/script.js",
@@ -232,6 +271,8 @@ function UmamiProvider(_a) {
     autoTrack = true,
     hostUrl,
     domains,
+    beforeSend,
+    performance,
     children
   } = _b, props = __objRest(_b, [
     "src",
@@ -239,9 +280,34 @@ function UmamiProvider(_a) {
     "autoTrack",
     "hostUrl",
     "domains",
+    "beforeSend",
+    "performance",
     "children"
   ]);
   var _a2;
+  const beforeSendGlobalName = (0, import_react2.useMemo)(() => {
+    if (typeof beforeSend !== "function") return void 0;
+    return createBeforeSendGlobalName();
+  }, [beforeSend]);
+  const [registeredBeforeSendName, setRegisteredBeforeSendName] = (0, import_react2.useState)(() => typeof beforeSend === "string" ? beforeSend : void 0);
+  (0, import_react2.useEffect)(() => {
+    if (typeof beforeSend === "string") {
+      setRegisteredBeforeSendName(beforeSend);
+      return;
+    }
+    if (!beforeSendGlobalName || typeof beforeSend !== "function") {
+      setRegisteredBeforeSendName(void 0);
+      return;
+    }
+    window[beforeSendGlobalName] = toSafeBeforeSend(beforeSend);
+    setRegisteredBeforeSendName(beforeSendGlobalName);
+    return () => {
+      if (window[beforeSendGlobalName]) {
+        delete window[beforeSendGlobalName];
+      }
+      setRegisteredBeforeSendName(void 0);
+    };
+  }, [beforeSend, beforeSendGlobalName]);
   const proxyOptions = process.env.next_umami_proxy ? {
     clientScriptPath: process.env.next_umami_clientScriptPath,
     serverScriptDestination: process.env.next_umami_serverScriptDestination,
@@ -249,13 +315,19 @@ function UmamiProvider(_a) {
     serverApiDestination: process.env.next_umami_serverApiDestination
   } : void 0;
   const effectiveHostUrl = (proxyOptions == null ? void 0 : proxyOptions.clientApiPath) || hostUrl;
+  const shouldWaitForBeforeSendRegistration = typeof beforeSend === "function" && !registeredBeforeSendName;
+  if (shouldWaitForBeforeSendRegistration) {
+    return /* @__PURE__ */ import_react2.default.createElement(import_react2.default.Fragment, null, children);
+  }
   return /* @__PURE__ */ import_react2.default.createElement(import_react2.default.Fragment, null, /* @__PURE__ */ import_react2.default.createElement(
     import_script.default,
-    __spreadValues(__spreadProps(__spreadValues(__spreadValues({
+    __spreadValues(__spreadProps(__spreadValues(__spreadValues(__spreadValues(__spreadValues({
       src: (_a2 = proxyOptions == null ? void 0 : proxyOptions.clientScriptPath) != null ? _a2 : src,
       "data-website-id": websiteId,
       "data-auto-track": autoTrack
-    }, effectiveHostUrl && { "data-host-url": effectiveHostUrl }), domains && {
+    }, performance && { "data-performance": "true" }), registeredBeforeSendName && {
+      "data-before-send": registeredBeforeSendName
+    }), effectiveHostUrl && { "data-host-url": effectiveHostUrl }), domains && {
       "data-domains": Array.isArray(domains) ? domains.join(",") : domains
     }), {
       strategy: "afterInteractive"
@@ -263,10 +335,52 @@ function UmamiProvider(_a) {
   ), children);
 }
 
+// src/createUmamiDistinctId.ts
+var DEFAULT_DISTINCT_ID_LENGTH = 50;
+var MIN_DISTINCT_ID_LENGTH = 1;
+var MAX_DISTINCT_ID_LENGTH = 50;
+function parseDistinctIdLength(maxLength = DEFAULT_DISTINCT_ID_LENGTH) {
+  if (!Number.isInteger(maxLength) || maxLength < MIN_DISTINCT_ID_LENGTH || maxLength > MAX_DISTINCT_ID_LENGTH) {
+    throw new Error(
+      "Umami distinct ID maxLength must be an integer from 1 to 50"
+    );
+  }
+  return maxLength;
+}
+function getWebCrypto() {
+  var _a;
+  if ((_a = globalThis.crypto) == null ? void 0 : _a.subtle) {
+    return globalThis.crypto;
+  }
+  throw new Error("Umami distinct ID hashing requires Web Crypto support");
+}
+function bytesToLowercaseHex(bytes) {
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join(
+    ""
+  );
+}
+function createUmamiDistinctId(_0) {
+  return __async(this, arguments, function* (input, options = {}) {
+    var _a;
+    if (typeof input !== "string" || input.length === 0) {
+      throw new Error("Umami distinct ID input must be a non-empty string");
+    }
+    const maxLength = parseDistinctIdLength(options.maxLength);
+    const crypto = getWebCrypto();
+    const encoder = new TextEncoder();
+    const digest = yield crypto.subtle.digest(
+      "SHA-256",
+      encoder.encode(`${(_a = options.salt) != null ? _a : ""}${input}`)
+    );
+    return bytesToLowercaseHex(new Uint8Array(digest)).slice(0, maxLength);
+  });
+}
+
 // index.ts
 var next_umami_default = UmamiProvider;
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
+  createUmamiDistinctId,
   useUmami,
   withUmamiProxy
 });

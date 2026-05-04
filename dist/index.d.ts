@@ -1,7 +1,17 @@
-import { NextConfig } from 'next';
 import { ScriptProps } from 'next/script';
 import React, { ReactNode } from 'react';
+import { NextConfig } from 'next';
 
+type UmamiEventDataValue = string | number | boolean | null | undefined | UmamiEventDataValue[] | {
+    [key: string]: UmamiEventDataValue;
+};
+type UmamiEventData = {
+    [key: string]: UmamiEventDataValue;
+};
+type UmamiPayload = {
+    [key: string]: UmamiEventDataValue;
+};
+type UmamiBeforeSend = (type: string, payload: UmamiPayload) => UmamiPayload | false | null | undefined;
 interface PageView {
     hostname: string;
     language: string;
@@ -11,24 +21,12 @@ interface PageView {
     url: string;
     website: string;
 }
-type EventName = string;
-type EventData = Record<string, string | number>;
-declare function useUmami(): {
-    pageView: (data?: Partial<PageView>) => {
-        hostname?: string | undefined;
-        language?: string | undefined;
-        referrer?: string | undefined;
-        screen?: string | undefined;
-        title?: string | undefined;
-        url?: string | undefined;
-        website?: string | undefined;
-    };
-    event: (name: EventName, data?: EventData) => {
-        name: string;
-        data: EventData | undefined;
-    };
+type UmamiTrackPayload = Partial<PageView> | UmamiEventData;
+type UmamiTrackOptions = {
+    [key: string]: UmamiEventDataValue;
 };
-
+type UmamiTrackArguments = [] | [payload: UmamiTrackPayload] | [payload: UmamiTrackPayload, options: UmamiTrackOptions] | [eventName: string] | [eventName: string, eventData: UmamiEventData] | [eventName: string, eventData: UmamiEventData, options: UmamiTrackOptions];
+type UmamiIdentifyArguments = [id: string] | [data: UmamiEventData] | [id: string, data: UmamiEventData];
 interface UmamiProps extends Pick<ScriptProps, 'onLoad' | 'onReady' | 'onError'> {
     /**
      * The source of the script. Defaults to version hosted by Umami.
@@ -50,6 +48,14 @@ interface UmamiProps extends Pick<ScriptProps, 'onLoad' | 'onReady' | 'onError'>
      * If you want the tracker to only run on specific domains, you can add them to your tracker script. This is a comma delimited list of domain names. Helps if you are working in a staging/development environment.
      */
     domains?: string | string[];
+    /**
+     * Name of a global before-send function or a callback to register for request modification/cancellation.
+     */
+    beforeSend?: string | UmamiBeforeSend;
+    /**
+     * Enables Umami performance tracking when set to true.
+     */
+    performance?: boolean;
     children?: ReactNode;
 }
 type NextUmamiProxyOptions = {
@@ -71,8 +77,51 @@ type NextUmamiProxyOptions = {
     serverApiDestination?: string;
 };
 
+type UmamiTracker = {
+    track: (...args: UmamiTrackArguments) => unknown;
+    identify?: (...args: UmamiIdentifyArguments) => unknown;
+};
+declare global {
+    interface Window {
+        umami?: UmamiTracker;
+    }
+}
+declare function useUmami(): {
+    pageView: (data?: Partial<PageView>) => {
+        hostname?: string | undefined;
+        language?: string | undefined;
+        referrer?: string | undefined;
+        screen?: string | undefined;
+        title?: string | undefined;
+        url?: string | undefined;
+        website?: string | undefined;
+    };
+    event: (name: string, data?: UmamiEventData) => {
+        name: string;
+        data: undefined;
+    } | {
+        name: string;
+        data: {
+            [x: string]: UmamiEventDataValue;
+        };
+    };
+    track: (...args: UmamiTrackArguments) => void;
+    identify: (...args: UmamiIdentifyArguments) => void;
+};
+
 declare function withUmamiProxy(options?: NextUmamiProxyOptions): NextConfig;
 
-declare function UmamiProvider({ src, websiteId, autoTrack, hostUrl, domains, children, ...props }: UmamiProps): React.JSX.Element;
+declare global {
+    interface Window {
+        [key: string]: unknown;
+    }
+}
+declare function UmamiProvider({ src, websiteId, autoTrack, hostUrl, domains, beforeSend, performance, children, ...props }: UmamiProps): React.JSX.Element;
 
-export { UmamiProvider as default, useUmami, withUmamiProxy };
+type CreateUmamiDistinctIdOptions = {
+    salt?: string;
+    maxLength?: number;
+};
+declare function createUmamiDistinctId(input: string, options?: CreateUmamiDistinctIdOptions): Promise<string>;
+
+export { type CreateUmamiDistinctIdOptions, type PageView, type UmamiBeforeSend, type UmamiEventData, type UmamiEventDataValue, type UmamiIdentifyArguments, type UmamiPayload, type UmamiProps, type UmamiTrackArguments, type UmamiTrackOptions, type UmamiTrackPayload, createUmamiDistinctId, UmamiProvider as default, useUmami, withUmamiProxy };

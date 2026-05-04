@@ -1,0 +1,4 @@
+dist
+node_modules
+demo/.next
+demo/node_modules
