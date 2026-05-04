@@ -1,9 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@theme {
+  --color-brand: #147af3;
+}
 
 @layer base {
-    a {
-        @apply underline
-    }
+  a {
+    @apply underline;
+  }
 }

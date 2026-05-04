@@ -7,7 +7,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 export default function Home() {
-  const umami = useUmami()
+  const { event, identify, pageView, track } = useUmami()
 
   const [basicEventData, setBasicEventData] = useState({})
   const [customEventData, setCustomEventData] = useState({})
@@ -16,9 +16,8 @@ export default function Home() {
   const [customPageviewData, setCustomPageviewData] = useState({})
 
   useEffect(() => {
-    const pageView = umami.pageView()
-    setCustomPageviewData(pageView)
-  }, [umami.pageView])
+    pageView()
+  }, [pageView])
 
   return (
     <main className="flex min-h-screen max-w-2xl mx-auto flex-col p-10 md:px-0 gap-10 items-center justify-center">
@@ -72,7 +71,9 @@ export default function Home() {
               <span>
                 umami.<span className="text-brand">pageView</span>({'{ '}
                 <span className="text-sky-500">url</span>:{' '}
-                <span className="text-green-500">'/custom-pageview'</span>
+                <span className="text-green-500">
+                  &apos;/custom-pageview&apos;
+                </span>
                 {' }) '}
               </span>
             </code>
@@ -81,8 +82,8 @@ export default function Home() {
             </pre>
             <Button
               onClick={() => {
-                const pageView = umami.pageView({ url: '/custom-pageview' })
-                setCustomPageviewData({ ...pageView, website: '***' })
+                const customPageView = pageView({ url: '/custom-pageview' })
+                setCustomPageviewData({ ...customPageView, website: '***' })
               }}
             >
               Send Custom Pageview
@@ -96,9 +97,10 @@ export default function Home() {
             <code className="select-all w-full inline-flex bg-white text-sm border text-black rounded-md p-2.5">
               <span>
                 umami.<span className="text-brand">track</span>(
-                <span className="text-green-500">'Demo Track'</span>,{' { '}
+                <span className="text-green-500">&apos;Demo Track&apos;</span>,
+                {' { '}
                 <span className="text-sky-500">source</span>:{' '}
-                <span className="text-green-500">'demo'</span>
+                <span className="text-green-500">&apos;demo&apos;</span>
                 {' }) '}
               </span>
             </code>
@@ -108,7 +110,7 @@ export default function Home() {
             <Button
               onClick={() => {
                 const payload = { name: 'Demo Track', data: { source: 'demo' } }
-                umami.track(payload.name, payload.data)
+                track(payload.name, payload.data)
                 setTrackData(payload)
               }}
             >
@@ -119,9 +121,10 @@ export default function Home() {
             <code className="select-all w-full inline-flex bg-white text-sm border text-black rounded-md p-2.5">
               <span>
                 umami.<span className="text-brand">identify</span>(
-                <span className="text-green-500">'demo-user'</span>,{' { '}
+                <span className="text-green-500">&apos;demo-user&apos;</span>,
+                {' { '}
                 <span className="text-sky-500">plan</span>:{' '}
-                <span className="text-green-500">'starter'</span>
+                <span className="text-green-500">&apos;starter&apos;</span>
                 {' }) '}
               </span>
             </code>
@@ -131,7 +134,7 @@ export default function Home() {
             <Button
               onClick={() => {
                 const payload = { id: 'demo-user', data: { plan: 'starter' } }
-                umami.identify(payload.id, payload.data)
+                identify(payload.id, payload.data)
                 setIdentifyData(payload)
               }}
             >
@@ -142,7 +145,7 @@ export default function Home() {
             <code className="select-all w-full inline-flex bg-white text-sm border text-black rounded-md p-2.5">
               <span>
                 umami.<span className="text-brand">event</span>(
-                <span className="text-green-500">'Basic Event'</span>)
+                <span className="text-green-500">&apos;Basic Event&apos;</span>)
               </span>
             </code>
             <pre className="border text-sm overflow-auto min-h-10 p-1 text-black rounded-md">
@@ -150,8 +153,8 @@ export default function Home() {
             </pre>
             <Button
               onClick={() => {
-                const event = umami.event('Basic Event')
-                setBasicEventData(event)
+                const basicEvent = event('Basic Event')
+                setBasicEventData(basicEvent)
               }}
             >
               Send Basic Event
@@ -161,7 +164,8 @@ export default function Home() {
             <code className="select-all w-full inline-flex bg-white text-sm border text-black rounded-md p-2.5">
               <span>
                 umami.<span className="text-brand">event</span>(
-                <span className="text-green-500">'Custom Event'</span>,{' { '}
+                <span className="text-green-500">&apos;Custom Event&apos;</span>
+                ,{' { '}
                 <span className="text-sky-500">userAgent</span>:{' '}
                 <span className="text-sky-500">
                   <span className="text-amber-400 italic">window</span>
@@ -175,10 +179,10 @@ export default function Home() {
             </pre>
             <Button
               onClick={() => {
-                const event = umami.event('Custom Event', {
+                const customEvent = event('Custom Event', {
                   userAgent: window.navigator.userAgent,
                 })
-                setCustomEventData(event)
+                setCustomEventData(customEvent)
               }}
             >
               Send Custom Event

@@ -54,8 +54,10 @@ export type UmamiIdentifyArguments =
   | [id: string, data: UmamiEventData]
 
 // https://umami.is/docs/tracker-configuration
-export interface UmamiProps
-  extends Pick<ScriptProps, 'onLoad' | 'onReady' | 'onError'> {
+export interface UmamiProps extends Pick<
+  ScriptProps,
+  'onLoad' | 'onReady' | 'onError'
+> {
   /**
    * The source of the script. Defaults to version hosted by Umami.
    */

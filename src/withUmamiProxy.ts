@@ -8,9 +8,11 @@ type NextUmamiEnv = { next_umami_proxy: 'true' } & {
     | undefined
 }
 
+type NextUmamiProxyConfig = (nextConfig: NextConfig) => NextConfig
+
 export default function withUmamiProxy(
   options: NextUmamiProxyOptions = {}
-): NextConfig {
+): NextUmamiProxyConfig {
   return (nextConfig: NextConfig): NextConfig => {
     const nextUmamiEnv: NextUmamiEnv = {
       next_umami_proxy: 'true',

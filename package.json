@@ -1,6 +1,6 @@
 {
   "name": "next-umami",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Next.js Umami Analytics Integration",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -45,16 +45,16 @@
     "react-dom": ">=18.0.0"
   },
   "devDependencies": {
-    "@types/node": "^20.14.14",
-    "@types/react": "^18.0.37",
-    "@types/react-dom": "^18.0.11",
-    "next": "^14.2.5",
-    "prettier": "^3.3.3",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "ts-node": "^10.9.1",
-    "tsup": "^8.2.4",
-    "typescript": "^5.2.0"
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "next": "^16.2.4",
+    "prettier": "^3.8.3",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=18.17.0"
@@ -64,5 +64,8 @@
     "semi": false,
     "singleQuote": true,
     "trailingComma": "es5"
+  },
+  "overrides": {
+    "postcss": "^8.5.13"
   }
 }
