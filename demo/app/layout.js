@@ -13,6 +13,7 @@ export default function RootLayout({ children }) {
           websiteId={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
           domains="next-umami.vercel.app"
           autoTrack={false}
+          performance
         />
       </head>
       <body>{children}</body>

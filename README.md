@@ -59,16 +59,43 @@ export default function Home() {
 
 #### `UmamiProvider` Props
 
-| Name         | Type                 | Description                                                                                                                                                                                                                                                                               |
-| ------------ | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `websiteId`  | `string`             | Website ID found in Umami dashboard. https://umami.is/docs/collect-data.                                                                                                                                                                                                                  |
-| `src?`       | `string`             | By default it's set to https://cloud.umami.is/script.js. You can override this in case you're self-hosting.                                                                                                                                                                               |
-| `hostUrl?`   | `string`             | By default, Umami will send data to wherever the script is located. You can override this to send data to another location. [See in docs](https://umami.is/docs/tracker-configuration#data-host-url).                                                                                     |
-| `autoTrack?` | `boolean`            | By default, Umami tracks all pageviews and events for you automatically. You can disable this behavior and track events yourself using the tracker functions. [See in docs](https://umami.is/docs/tracker-configuration#data-auto-track).                                                 |
-| `domains?`   | `string[]`           | If you want the tracker to only run on specific domains, you can add them to your tracker script. This is a comma delimited list of domain names. Helps if you are working in a staging/development environment. [See in docs](https://umami.is/docs/tracker-configuration#data-domains). |
-| `onLoad?`    | `(e: any) => void`   | Execute code after Umami has loaded.                                                                                                                                                                                                                                                      |
-| `onReady?`   | `() => void \| null` | Execute code after Umami's load event when it first loads and then after every subsequent component re-mount.                                                                                                                                                                             |
-| `onError?`   | `(e: any) => void`   | Handle errors if Umami fails to load.                                                                                                                                                                                                                                                     |
+| Name           | Type                        | Description                                                                                                                                                                                                                                                                               |
+| -------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `websiteId`    | `string`                    | Website ID found in Umami dashboard. https://umami.is/docs/collect-data.                                                                                                                                                                                                                  |
+| `src?`         | `string`                    | By default it's set to https://cloud.umami.is/script.js. You can override this in case you're self-hosting.                                                                                                                                                                               |
+| `hostUrl?`     | `string`                    | By default, Umami will send data to wherever the script is located. You can override this to send data to another location. [See in docs](https://umami.is/docs/tracker-configuration#data-host-url).                                                                                     |
+| `autoTrack?`   | `boolean`                   | By default, Umami tracks all pageviews and events for you automatically. You can disable this behavior and track events yourself using the tracker functions. [See in docs](https://umami.is/docs/tracker-configuration#data-auto-track).                                                 |
+| `domains?`     | `string \| string[]`        | If you want the tracker to only run on specific domains, you can add them to your tracker script. This is a comma delimited list of domain names. Helps if you are working in a staging/development environment. [See in docs](https://umami.is/docs/tracker-configuration#data-domains). |
+| `beforeSend?`  | `string \| UmamiBeforeSend` | Sets `data-before-send`. Strings are passed directly; functions are registered on `window` with a package-prefixed generated name.                                                                                                                                                        |
+| `performance?` | `boolean`                   | When true, sets `data-performance="true"` for Umami performance collection.                                                                                                                                                                                                               |
+| `onLoad?`      | `(e: any) => void`          | Execute code after Umami has loaded.                                                                                                                                                                                                                                                      |
+| `onReady?`     | `() => void \| null`        | Execute code after Umami's load event when it first loads and then after every subsequent component re-mount.                                                                                                                                                                             |
+| `onError?`     | `(e: any) => void`          | Handle errors if Umami fails to load.                                                                                                                                                                                                                                                     |
+
+`beforeSend` can modify or cancel outgoing requests on Umami tracker versions that support `data-before-send`:
+
+```jsx
+<UmamiProvider
+  websiteId="a3d85e62-dc8b-4d4b-bd1f-e8a71b55d3cf"
+  beforeSend={(type, payload) => {
+    if (type === 'event' && payload.name === 'Internal Event') return false
+
+    return {
+      ...payload,
+      data: {
+        ...(payload.data || {}),
+        app: 'marketing-site',
+      },
+    }
+  }}
+/>
+```
+
+Return a payload object to send modified data. Return `false`, `null`, or `undefined` to cancel. Thrown errors are caught, logged without payload details, and cancel the request. Prefer removing or hashing sensitive data; do not log raw payloads, emails, or user identifiers from this callback. If you pass a function from an app-router server layout, move that provider usage behind a client boundary because functions are client-only props.
+
+### Umami tracker compatibility
+
+Core `pageView`, `event`, script loading, and proxy behavior remain usable with older Umami trackers. Newer tracker features require newer Umami versions: `identify`/distinct IDs and `data-before-send` were introduced in Umami v2.18.0 (`v2.18.1` or newer is recommended for identify fixes), while `data-performance` requires Umami v3.1.0 or newer.
 
 ### Proxying Umami Requests
 
@@ -76,7 +103,7 @@ To improve performance and avoid ad blockers that might interfere with your anal
 
 ```mjs
 /** @type {import('next').NextConfig} */
-import { withUmamiProxy } from 'next-umami';
+import { withUmamiProxy } from 'next-umami'
 
 const nextConfig = withUmamiProxy({
   clientApiPath: '/events',
@@ -84,23 +111,23 @@ const nextConfig = withUmamiProxy({
 })({
   // Your existing Next.js configuration
   reactStrictMode: true,
-});
+})
 
-export default nextConfig;
+export default nextConfig
 ```
 
 The `withUmamiProxy` function accepts these options:
 
-| Name                     | Type     | Description                                                                            |
-|-------------------------|----------|----------------------------------------------------------------------------------------|
-| `clientScriptPath?`     | `string` | Path where Umami script will be served. Defaults to `/script.js`                      |
-| `serverScriptDestination?` | `string` | Original Umami script URL. Defaults to `https://cloud.umami.is/script.js`           |
-| `clientApiPath?`        | `string` | Path where tracking data will be sent. Defaults to `/`                                |
-| `serverApiDestination?` | `string` | Original Umami API endpoint. Defaults to `https://api-gateway.umami.dev/api/send`     |
+| Name                       | Type     | Description                                                                       |
+| -------------------------- | -------- | --------------------------------------------------------------------------------- |
+| `clientScriptPath?`        | `string` | Path where Umami script will be served. Defaults to `/script.js`                  |
+| `serverScriptDestination?` | `string` | Original Umami script URL. Defaults to `https://cloud.umami.is/script.js`         |
+| `clientApiPath?`           | `string` | Path where tracking data will be sent. Defaults to `/`                            |
+| `serverApiDestination?`    | `string` | Original Umami API endpoint. Defaults to `https://api-gateway.umami.dev/api/send` |
 
 ## Send Custom Events
 
-The `useUmami` hook exposes two functions that you can call on your website if you want more control over your tracking.
+The `useUmami` hook exposes functions that you can call on your website if you want more control over your tracking.
 By default, everything is automatically collected, but you can disable this using `autoTrack={false}` in `UmamiProvider` and send the data yourself.
 
 ### Pageview
@@ -108,22 +135,22 @@ By default, everything is automatically collected, but you can disable this usin
 Default properties are automatically sent. If you wish to override any property, use the `umami.pageView` function like this:
 
 ```jsx
+import { useEffect } from 'react'
 import { useUmami } from 'next-umami'
 
 export default function Page() {
   const umami = useUmami()
 
-  // Default Pageview
-  umami.pageView()
+  useEffect(() => {
+    // Default Pageview
+    umami.pageView()
+  }, [umami.pageView])
 
-  // OR
-
-  // Custom Pageview
-  umami.pageView({
-    url: '/custom-pageview',
-  })
-
-  return <h1>My Page</h1>
+  return (
+    <button onClick={() => umami.pageView({ url: '/custom-pageview' })}>
+      Send custom pageview
+    </button>
+  )
 }
 ```
 
@@ -168,12 +195,52 @@ export default function UmamiButtons() {
 }
 ```
 
+### Low-level `track`
+
+`track` forwards to Umami's tracker overloads and queues calls until `window.umami.track` is available:
+
+```jsx
+umami.track()
+umami.track({ url: '/custom-pageview' })
+umami.track('Signup')
+umami.track('Signup', { plan: 'pro', trial: true })
+umami.track('Signup', { plan: 'pro' }, { timestamp: Date.now() })
+```
+
+### Identify visitors
+
+`identify` forwards to Umami's identify API and queues calls until available:
+
+```jsx
+umami.identify('visitor_123')
+umami.identify({ plan: 'pro' })
+umami.identify('visitor_123', { plan: 'pro' })
+```
+
+Distinct IDs must be non-empty strings. Umami recommends IDs of 50 characters or fewer; longer values warn in development instead of failing so existing IDs keep working.
+
+For privacy, hash stable identifiers before sending them:
+
+```jsx
+import { createUmamiDistinctId, useUmami } from 'next-umami'
+
+async function identifyUser(email, umami) {
+  const distinctId = await createUmamiDistinctId(email, {
+    salt: process.env.NEXT_PUBLIC_UMAMI_ID_SALT,
+  })
+
+  umami.identify(distinctId)
+}
+```
+
+`createUmamiDistinctId(input, options)` uses SHA-256 through Web Crypto, lower-case hex output, and truncates to `maxLength` (default 50, allowed 1-50). It throws for empty input, invalid length, or missing Web Crypto support, and never logs or stores the input.
+
 #### `Event` Props
 
-| Name    | Type                               | Description               |
-| ------- | ---------------------------------- |---------------------------|
-| `name`  | `string`                           | Name of the event         |
-| `data?` | `Record<string, string \| number>` | Custom data for the event |
+| Name    | Type             | Description               |
+| ------- | ---------------- | ------------------------- |
+| `name`  | `string`         | Name of the event         |
+| `data?` | `UmamiEventData` | Custom data for the event |
 
 - Numbers have a max precision of 4.
 - Strings have a max length of 500.

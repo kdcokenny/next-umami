@@ -1,125 +1,162 @@
 'use client'
-import { useCallback, useEffect, useState } from 'react'
 
-interface PageView {
-  // Hostname of server
-  hostname: string
-  // Browser language
-  language: string
-  // Page referrer
-  referrer: string
-  // Screen dimensions (eg. 1920x1080)
-  screen: string
-  // Page title
-  title: string
-  // Page url
-  url: string
-  // Website ID (required)
-  website: string
+import { useCallback, useEffect, useRef } from 'react'
+import type {
+  PageView,
+  UmamiEventData,
+  UmamiIdentifyArguments,
+  UmamiTrackArguments,
+} from './common'
+
+type QueuedUmamiCall =
+  | { method: 'track'; args: UmamiTrackArguments }
+  | { method: 'identify'; args: UmamiIdentifyArguments }
+
+type UmamiTracker = {
+  track: (...args: UmamiTrackArguments) => unknown
+  identify?: (...args: UmamiIdentifyArguments) => unknown
 }
 
-type EventName = string
-type EventData = Record<string, string | number>
-
-interface QueuedEvent {
-  type: 'pageView' | 'event'
-  payload: {
-    name?: EventName
-    data?: Partial<PageView> | EventData
+declare global {
+  interface Window {
+    umami?: UmamiTracker
   }
-  timestamp: number
+}
+
+function getUmamiTracker() {
+  if (typeof window === 'undefined') return undefined
+
+  return window.umami
+}
+
+function isUmamiReadyFor(method: QueuedUmamiCall['method']) {
+  const tracker = getUmamiTracker()
+
+  if (!tracker) return false
+  if (method === 'identify') return typeof tracker.identify === 'function'
+
+  return typeof tracker.track === 'function'
+}
+
+function warnIfDistinctIdIsLong(id: string) {
+  if (id.length <= 50) return
+
+  console.warn('Umami distinct IDs should be 50 characters or fewer')
+}
+
+function parseIdentifyArguments(args: UmamiIdentifyArguments) {
+  const [firstArgument] = args
+
+  if (typeof firstArgument !== 'string') return args
+  if (firstArgument.length > 0) {
+    warnIfDistinctIdIsLong(firstArgument)
+    return args
+  }
+
+  throw new Error('Umami distinct ID must be a non-empty string')
+}
+
+function flushQueuedCalls(queue: QueuedUmamiCall[]) {
+  for (const [index, queuedCall] of queue.entries()) {
+    const tracker = getUmamiTracker()
+
+    if (!tracker || !isUmamiReadyFor(queuedCall.method)) {
+      return queue.slice(index)
+    }
+
+    if (queuedCall.method === 'identify') {
+      tracker.identify?.(...queuedCall.args)
+      continue
+    }
+
+    tracker.track(...queuedCall.args)
+  }
+
+  return []
 }
 
 // https://umami.is/docs/tracker-functions
 export default function useUmami() {
-  const [isClient, setIsClient] = useState(false)
-  const [eventQueue, setEventQueue] = useState<QueuedEvent[]>([])
+  const eventQueue = useRef<QueuedUmamiCall[]>([])
 
-  useEffect(() => {
-    setIsClient(true) // this will be set to true only in the client
+  const flushQueue = useCallback(() => {
+    if (eventQueue.current.length === 0) return
+
+    eventQueue.current = flushQueuedCalls(eventQueue.current)
   }, [])
 
-  const isUmamiAvailable = useCallback(() => {
-    return isClient && typeof (window as any).umami !== 'undefined'
-  }, [isClient])
-
   useEffect(() => {
-    if (!isClient) return
+    flushQueue()
 
-    const processQueue = () => {
-      if (!isUmamiAvailable()) return
+    const intervalId = window.setInterval(flushQueue, 1000)
 
-      while (eventQueue.length > 0) {
-        const event = eventQueue[0]
-        if (event.type === 'pageView') {
-          ;(window as any).umami?.track(event.payload.data)
-        } else {
-          ;(window as any).umami?.track(
-            event.payload.name as string,
-            event.payload.data
-          )
-        }
-        setEventQueue((queue) => queue.slice(1))
+    return () => window.clearInterval(intervalId)
+  }, [flushQueue])
+
+  const enqueueOrSend = useCallback(
+    (queuedCall: QueuedUmamiCall) => {
+      flushQueue()
+
+      if (eventQueue.current.length > 0) {
+        console.warn(`Umami tracker unavailable; queueing ${queuedCall.method}`)
+        eventQueue.current = [...eventQueue.current, queuedCall]
+        return
       }
-    }
 
-    const intervalId = setInterval(() => {
-      if (isUmamiAvailable()) {
-        processQueue()
-        if (eventQueue.length === 0) {
-          clearInterval(intervalId)
-        }
+      const tracker = getUmamiTracker()
+      if (!tracker || !isUmamiReadyFor(queuedCall.method)) {
+        console.warn(`Umami tracker unavailable; queueing ${queuedCall.method}`)
+        eventQueue.current = [...eventQueue.current, queuedCall]
+        return
       }
-    }, 1000)
 
-    return () => clearInterval(intervalId)
-  }, [isClient, isUmamiAvailable, eventQueue])
+      if (queuedCall.method === 'identify') {
+        tracker.identify?.(...queuedCall.args)
+        return
+      }
+
+      tracker.track(...queuedCall.args)
+    },
+    [flushQueue]
+  )
+
+  const track = useCallback(
+    (...args: UmamiTrackArguments) => {
+      enqueueOrSend({ method: 'track', args })
+    },
+    [enqueueOrSend]
+  )
+
+  const identify = useCallback(
+    (...args: UmamiIdentifyArguments) => {
+      enqueueOrSend({ method: 'identify', args: parseIdentifyArguments(args) })
+    },
+    [enqueueOrSend]
+  )
 
   const pageView = useCallback(
     (data?: Partial<PageView>) => {
-      const fullData = {
-        ...(data || {}),
-      }
+      const fullData = { ...(data || {}) }
 
-      if (!isUmamiAvailable()) {
-        console.warn('UmamiProvider not found, queueing pageView')
-        setEventQueue((queue) => [
-          ...queue,
-          {
-            type: 'pageView',
-            payload: { data: fullData },
-            timestamp: Date.now(),
-          },
-        ])
-        return fullData
-      }
-
-      ;(window as any).umami?.track(fullData)
+      track(fullData)
       return fullData
     },
-    [isUmamiAvailable]
+    [track]
   )
 
   const event = useCallback(
-    (name: EventName, data?: EventData) => {
-      if (!isUmamiAvailable()) {
-        console.warn('UmamiProvider not found, queueing event')
-        setEventQueue((queue) => [
-          ...queue,
-          {
-            type: 'event',
-            payload: { name, data },
-            timestamp: Date.now(),
-          },
-        ])
+    (name: string, data?: UmamiEventData) => {
+      if (!data) {
+        track(name)
         return { name, data }
       }
 
-      ;(window as any).umami?.track(name, { ...(data && { ...data }) })
-      return { name, data: { ...(data && { ...data }) } }
+      const eventData = { ...data }
+      track(name, eventData)
+      return { name, data: eventData }
     },
-    [isUmamiAvailable]
+    [track]
   )
 
-  return { pageView, event }
+  return { pageView, event, track, identify }
 }

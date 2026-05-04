@@ -11,9 +11,14 @@ export default function Home() {
 
   const [basicEventData, setBasicEventData] = useState({})
   const [customEventData, setCustomEventData] = useState({})
+  const [identifyData, setIdentifyData] = useState({})
+  const [trackData, setTrackData] = useState({})
   const [customPageviewData, setCustomPageviewData] = useState({})
 
-  umami.pageView()
+  useEffect(() => {
+    const pageView = umami.pageView()
+    setCustomPageviewData(pageView)
+  }, [umami.pageView])
 
   return (
     <main className="flex min-h-screen max-w-2xl mx-auto flex-col p-10 md:px-0 gap-10 items-center justify-center">
@@ -42,7 +47,7 @@ export default function Home() {
         </h1>
       </div>
       <div className="flex text-lg gap-2.5">
-        <Link href="https://github.com/gixnluca/next-umami" target="_blank">
+        <Link href="https://github.com/kdcokenny/next-umami" target="_blank">
           GitHub
         </Link>
         <Link href="https://www.npmjs.com/package/next-umami" target="_blank">
@@ -87,6 +92,52 @@ export default function Home() {
         <hr />
         <div className="space-y-2.5">
           <h3 className="font-semibold leading-none text-xl">Events</h3>
+          <div className="border space-y-2.5 w-full rounded-lg p-2.5">
+            <code className="select-all w-full inline-flex bg-white text-sm border text-black rounded-md p-2.5">
+              <span>
+                umami.<span className="text-brand">track</span>(
+                <span className="text-green-500">'Demo Track'</span>,{' { '}
+                <span className="text-sky-500">source</span>:{' '}
+                <span className="text-green-500">'demo'</span>
+                {' }) '}
+              </span>
+            </code>
+            <pre className="border text-sm overflow-auto min-h-10 p-1 text-black rounded-md">
+              {JSON.stringify(trackData, null, 2)}
+            </pre>
+            <Button
+              onClick={() => {
+                const payload = { name: 'Demo Track', data: { source: 'demo' } }
+                umami.track(payload.name, payload.data)
+                setTrackData(payload)
+              }}
+            >
+              Send Track Call
+            </Button>
+          </div>
+          <div className="border space-y-2.5 w-full rounded-lg p-2.5">
+            <code className="select-all w-full inline-flex bg-white text-sm border text-black rounded-md p-2.5">
+              <span>
+                umami.<span className="text-brand">identify</span>(
+                <span className="text-green-500">'demo-user'</span>,{' { '}
+                <span className="text-sky-500">plan</span>:{' '}
+                <span className="text-green-500">'starter'</span>
+                {' }) '}
+              </span>
+            </code>
+            <pre className="border text-sm overflow-auto min-h-10 p-1 text-black rounded-md">
+              {JSON.stringify(identifyData, null, 2)}
+            </pre>
+            <Button
+              onClick={() => {
+                const payload = { id: 'demo-user', data: { plan: 'starter' } }
+                umami.identify(payload.id, payload.data)
+                setIdentifyData(payload)
+              }}
+            >
+              Send Identify Call
+            </Button>
+          </div>
           <div className="border space-y-2.5 w-full rounded-lg p-2.5">
             <code className="select-all w-full inline-flex bg-white text-sm border text-black rounded-md p-2.5">
               <span>
