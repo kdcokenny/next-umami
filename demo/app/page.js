@@ -53,7 +53,7 @@ export default function Home() {
           NPM
         </Link>
         <Link
-          href="https://eu.umami.is/share/4S76ewS0dKoJ8841/next-umami.vercel.app"
+          href="https://cloud.umami.is/share/HH6ZKni7NKG6mZG7"
           target="_blank"
         >
           Umami Dashboard for this page

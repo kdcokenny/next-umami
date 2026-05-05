@@ -31,7 +31,7 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 ## Deploy on Vercel
 
-This demo is a separate Next.js 16 app and should run on Node.js 20.9.0 or newer. It is configured for production Vercel deployments with the published `"next-umami": "^2.0.2"` package.
+This demo is a separate Next.js 16 app and should run on Node.js 20.9.0 or newer. It is configured for production Vercel deployments with the published `"next-umami": "^2.0.3"` package.
 
 ### Production Vercel setup
 
