@@ -201,11 +201,13 @@ export default function UmamiButtons() {
 
 ```jsx
 umami.track()
-umami.track({ url: '/custom-pageview' })
+umami.track((props) => ({ ...props, url: '/custom-pageview' }))
 umami.track('Signup')
 umami.track('Signup', { plan: 'pro', trial: true })
 umami.track('Signup', { plan: 'pro' }, { timestamp: Date.now() })
 ```
+
+Use the function form for custom pageview overrides so Umami's default pageview properties, including `website`, are preserved.
 
 ### Identify visitors
 

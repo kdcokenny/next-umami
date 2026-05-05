@@ -38,10 +38,15 @@ export interface PageView {
 
 export type UmamiTrackPayload = Partial<PageView> | UmamiEventData
 
+export type UmamiPageViewTransformer = (
+  properties: PageView
+) => Partial<PageView> | PageView
+
 export type UmamiTrackOptions = { [key: string]: UmamiEventDataValue }
 
 export type UmamiTrackArguments =
   | []
+  | [transformer: UmamiPageViewTransformer]
   | [payload: UmamiTrackPayload]
   | [payload: UmamiTrackPayload, options: UmamiTrackOptions]
   | [eventName: string]

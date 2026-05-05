@@ -12,6 +12,7 @@ export type {
   UmamiEventDataValue,
   UmamiIdentifyArguments,
   UmamiPayload,
+  UmamiPageViewTransformer,
   UmamiProps,
   UmamiTrackArguments,
   UmamiTrackOptions,

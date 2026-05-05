@@ -7,15 +7,13 @@ import type {
   UmamiIdentifyArguments,
   UmamiTrackArguments,
 } from './common'
-
-type QueuedUmamiCall =
-  | { method: 'track'; args: UmamiTrackArguments }
-  | { method: 'identify'; args: UmamiIdentifyArguments }
-
-type UmamiTracker = {
-  track: (...args: UmamiTrackArguments) => unknown
-  identify?: (...args: UmamiIdentifyArguments) => unknown
-}
+import {
+  createPageViewTrackArguments,
+  flushQueuedCalls,
+  isQueuedCallReadyForTracker,
+  type QueuedUmamiCall,
+  type UmamiTracker,
+} from './tracker'
 
 declare global {
   interface Window {
@@ -27,15 +25,6 @@ function getUmamiTracker() {
   if (typeof window === 'undefined') return undefined
 
   return window.umami
-}
-
-function isUmamiReadyFor(method: QueuedUmamiCall['method']) {
-  const tracker = getUmamiTracker()
-
-  if (!tracker) return false
-  if (method === 'identify') return typeof tracker.identify === 'function'
-
-  return typeof tracker.track === 'function'
 }
 
 function warnIfDistinctIdIsLong(id: string) {
@@ -56,25 +45,6 @@ function parseIdentifyArguments(args: UmamiIdentifyArguments) {
   throw new Error('Umami distinct ID must be a non-empty string')
 }
 
-function flushQueuedCalls(queue: QueuedUmamiCall[]) {
-  for (const [index, queuedCall] of queue.entries()) {
-    const tracker = getUmamiTracker()
-
-    if (!tracker || !isUmamiReadyFor(queuedCall.method)) {
-      return queue.slice(index)
-    }
-
-    if (queuedCall.method === 'identify') {
-      tracker.identify?.(...queuedCall.args)
-      continue
-    }
-
-    tracker.track(...queuedCall.args)
-  }
-
-  return []
-}
-
 // https://umami.is/docs/tracker-functions
 export default function useUmami() {
   const eventQueue = useRef<QueuedUmamiCall[]>([])
@@ -82,7 +52,7 @@ export default function useUmami() {
   const flushQueue = useCallback(() => {
     if (eventQueue.current.length === 0) return
 
-    eventQueue.current = flushQueuedCalls(eventQueue.current)
+    eventQueue.current = flushQueuedCalls(eventQueue.current, getUmamiTracker)
   }, [])
 
   useEffect(() => {
@@ -104,7 +74,7 @@ export default function useUmami() {
       }
 
       const tracker = getUmamiTracker()
-      if (!tracker || !isUmamiReadyFor(queuedCall.method)) {
+      if (!tracker || !isQueuedCallReadyForTracker(queuedCall, tracker)) {
         console.warn(`Umami tracker unavailable; queueing ${queuedCall.method}`)
         eventQueue.current = [...eventQueue.current, queuedCall]
         return
@@ -138,7 +108,7 @@ export default function useUmami() {
     (data?: Partial<PageView>) => {
       const fullData = { ...(data || {}) }
 
-      track(fullData)
+      track(...createPageViewTrackArguments(data))
       return fullData
     },
     [track]
