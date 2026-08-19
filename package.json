@@ -48,7 +48,7 @@
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "next": "^16.2.6",
+    "next": "^16.2.11",
     "prettier": "^3.8.3",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
@@ -66,6 +66,8 @@
     "trailingComma": "es5"
   },
   "overrides": {
-    "postcss": "^8.5.13"
+    "esbuild": "^0.28.1",
+    "postcss": "^8.5.23",
+    "sharp": "^0.35.0"
   }
 }
