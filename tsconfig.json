@@ -5,6 +5,7 @@
     "target": "es6",
     "module": "esnext",
     "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
     "noImplicitAny": true,
     "declaration": true,
     "jsx": "react",
